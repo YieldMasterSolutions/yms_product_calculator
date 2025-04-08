@@ -138,7 +138,7 @@ export default function Home() {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
-        <img src="/yms-logo.png" alt="YMS Logo" width={120} height={120} className="mx-auto mb-2" />
+   	<Image src="/yms-logo.png" alt="YMS Logo" width={120} height={120} className="mx-auto mb-2" />
         <h1 className="text-4xl font-extrabold text-green-400 tracking-tight">YieldMaster Solutions</h1>
         <p className="text-lg text-zinc-400">Planter Box Treatment Calculator</p>
       </div>
