@@ -170,7 +170,6 @@ const calculate = () => {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
-       <Image src="/yms-logo.png" alt="YMS Logo" width={240} height={120} className="mx-auto mb-2" />
         <h1 className="text-4xl font-extrabold text-green-400 tracking-tight">YieldMaster Solutions</h1>
         <p className="text-lg text-zinc-400">Planter Box Treatment Calculator</p>
       </div>
