@@ -1,7 +1,6 @@
 // src/app/page.tsx
 "use client";
 import { useRef, useState } from "react";
-import Image from "next/image";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
