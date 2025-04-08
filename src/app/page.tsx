@@ -1,7 +1,6 @@
 // src/app/page.tsx
 "use client";
 import { useRef, useState } from "react";
-import Image from "next/image";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -68,61 +67,92 @@ export default function Home() {
     });
   };
 
-  const calculate = () => {
-    const seed = seedTypes.find((s) => s["Seed Type"] === selectedSeedType);
-    const prod = products.find((p) => p["Product Name"] === selectedProduct);
-    // Check for missing inputs (trimming whitespace for string inputs)
-    if (!seed || !prod || acres.trim() === "" || seedingRate.trim() === "") {
-      console.log("Missing required input", { selectedSeedType, selectedProduct, acres, seedingRate });
-      return;
-    }
+const calculate = () => {
+  // Find the selected seed and product from the arrays.
+  const seed = seedTypes.find((s) => s["Seed Type"] === selectedSeedType);
+  const prod = products.find((p) => p["Product Name"] === selectedProduct);
 
-    const seedsPerLb = overrideSeeds ? parseFloat(overrideSeeds) : parseFloat(seed["Seeds/lb"]);
-    const acresNum = parseFloat(acres);
-    const seedRateNum = parseFloat(seedingRate);
-    const seedsPerUnit = parseFloat(seed["Seeds/Unit"]);
-    const lbsPerUnit = seed["Lbs/Unit"];
-    const appRate = prod["Application Rate in Ounces"];
-    const costPerOz = parseFloat(prod["Product Cost per oz"].replace(/[^\d.-]/g, ""));
-    const costPerPackage = parseFloat(prod["Product Cost per Package"].replace(/[^\d.-]/g, ""));
-    const packageSize = prod["Package Size"];
+  // Log all input values for troubleshooting.
+  console.log("Inputs:", {
+    selectedSeedType,
+    selectedProduct,
+    acres,
+    seedingRate,
+    rateType,
+    overrideSeeds,
+  });
 
-    let totalSeeds, totalWeight;
-    // Adjust calculation based on rate type
-    if (rateType === "lbs") {
-      // If rate is in lbs/acre, then total weight = acres * seedingRate, and convert that to seeds
-      totalWeight = acresNum * seedRateNum;
-      totalSeeds = totalWeight * seedsPerLb;
-    } else {
-      // If rate is in seeds/acre, total seeds is directly calculated
-      totalSeeds = acresNum * seedRateNum;
-      totalWeight = totalSeeds / seedsPerLb;
-    }
-
-    const totalUnits = totalWeight / lbsPerUnit;
-    const totalProductOz = totalUnits * appRate;
-    const totalPackages = Math.ceil(totalProductOz / packageSize);
-
-    const costPerUnit = costPerOz * appRate;
-    const costPerAcre = (costPerUnit * totalUnits) / acresNum;
-    const totalGrowerCost = totalPackages * costPerPackage;
-
-    setResult({
-      "Total Number of Seeds to be Treated": formatNumber(Math.round(totalSeeds)),
-      "Total Weight of Seeds to be Treated": formatNumber(totalWeight),
-      "Total Number of Units to be Treated": formatNumber(totalUnits),
-      "Number of Seeds per Unit": formatNumber(seedsPerUnit),
-      "Application Rate": `${formatNumber(appRate, 2)} oz per unit of seed`,
-      "Total Amount of Product Needed": `${formatNumber(totalProductOz, 2)} oz`,
-      "Total Number of Product Packages": `${formatNumber(totalPackages)} ${prod["Product Packaging"].toLowerCase()}`,
-      "Product Cost per Package": `$${formatNumber(costPerPackage, 2)}`,
-      "Total Cost to the Grower": `$${formatNumber(totalGrowerCost, 2)}`,
-      "Product Cost per Ounce": `$${formatNumber(costPerOz, 2)}`,
-      "Product Cost per Unit of Treated Seed": `$${formatNumber(costPerUnit, 2)}`,
-      "Product Cost per Acre": `$${formatNumber(costPerAcre, 2)}`,
+  // Guard clause: If required values are missing, log and exit.
+  if (!seed || !prod || acres.trim() === "" || seedingRate.trim() === "") {
+    console.log("Missing required input", {
+      selectedSeedType,
+      selectedProduct,
+      acres,
+      seedingRate,
     });
+    return;
+  }
+
+  // Parse the numeric inputs.
+  const acresNum = parseFloat(acres);
+  const seedRateNum = parseFloat(seedingRate);
+
+  // Check if numeric conversions resulted in valid numbers.
+  if (isNaN(acresNum) || isNaN(seedRateNum)) {
+    console.error("Parsed number is NaN", { acresNum, seedRateNum });
+    return;
+  }
+
+  // Determine seeds per pound, using the override if provided.
+  const seedsPerLb = overrideSeeds ? parseFloat(overrideSeeds) : parseFloat(seed["Seeds/lb"]);
+  console.log("Parsed values:", { acresNum, seedRateNum, seedsPerLb });
+
+  let totalSeeds: number, totalWeight: number;
+  if (rateType === "lbs") {
+    // For lbs/acre: the seedingRate is interpreted as pounds per acre.
+    totalWeight = acresNum * seedRateNum;
+    totalSeeds = totalWeight * seedsPerLb;
+  } else {
+    // For seeds/acre: seedingRate is directly the number of seeds per acre.
+    totalSeeds = acresNum * seedRateNum;
+    totalWeight = totalSeeds / seedsPerLb;
+  }
+  console.log("Calculated Totals:", { totalSeeds, totalWeight });
+
+  // Further calculations using the seed and product data.
+  const lbsPerUnit = seed["Lbs/Unit"];
+  const totalUnits = totalWeight / lbsPerUnit;
+  const appRate = prod["Application Rate in Ounces"];
+  const totalProductOz = totalUnits * appRate;
+  const totalPackages = Math.ceil(totalProductOz / prod["Package Size"]);
+
+  const costPerOz = parseFloat(prod["Product Cost per oz"].replace(/[^\d.-]/g, ""));
+  const costPerPackage = parseFloat(prod["Product Cost per Package"].replace(/[^\d.-]/g, ""));
+  const costPerUnit = costPerOz * appRate;
+  const costPerAcre = (costPerUnit * totalUnits) / acresNum;
+  const totalGrowerCost = totalPackages * costPerPackage;
+
+  // Create the result object.
+  const output: CalculationResult = {
+    "Total Number of Seeds to be Treated": formatNumber(Math.round(totalSeeds)),
+    "Total Weight of Seeds to be Treated": formatNumber(totalWeight),
+    "Total Number of Units to be Treated": formatNumber(totalUnits),
+    "Number of Seeds per Unit": formatNumber(parseFloat(seed["Seeds/Unit"])),
+    "Application Rate": `${formatNumber(appRate, 2)} oz per unit of seed`,
+    "Total Amount of Product Needed": `${formatNumber(totalProductOz, 2)} oz`,
+    "Total Number of Product Packages": `${formatNumber(totalPackages)} ${prod["Product Packaging"].toLowerCase()}`,
+    "Product Cost per Package": `$${formatNumber(costPerPackage, 2)}`,
+    "Total Cost to the Grower": `$${formatNumber(totalGrowerCost, 2)}`,
+    "Product Cost per Ounce": `$${formatNumber(costPerOz, 2)}`,
+    "Product Cost per Unit of Treated Seed": `$${formatNumber(costPerUnit, 2)}`,
+    "Product Cost per Acre": `$${formatNumber(costPerAcre, 2)}`,
   };
 
+  console.log("Output:", output);
+  setResult(output);
+};
+
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     calculate();
@@ -139,7 +169,7 @@ export default function Home() {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
-   	<Image src="/yms-logo.png" alt="YMS Logo" width={120} height={120} className="mx-auto mb-2" />
+        <img src="/yms-logo.png" alt="YMS Logo" width={120} height={120} className="mx-auto mb-2" />
         <h1 className="text-4xl font-extrabold text-green-400 tracking-tight">YieldMaster Solutions</h1>
         <p className="text-lg text-zinc-400">Planter Box Treatment Calculator</p>
       </div>
