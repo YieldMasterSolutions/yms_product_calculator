@@ -55,7 +55,7 @@ export default function Home() {
 
   const downloadPDF = () => {
     if (!resultRef.current) return;
-    html2canvas(resultRef.current, { scale: 2 }).then((canvas) => {
+    html2canvas(resultRef.current, { scale: window.devicePixelRatio || 2 }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "pt", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -67,92 +67,52 @@ export default function Home() {
     });
   };
 
-const calculate = () => {
-  // Find the selected seed and product from the arrays.
-  const seed = seedTypes.find((s) => s["Seed Type"] === selectedSeedType);
-  const prod = products.find((p) => p["Product Name"] === selectedProduct);
+  const calculate = () => {
+    const seed = seedTypes.find((s) => s["Seed Type"] === selectedSeedType);
+    const prod = products.find((p) => p["Product Name"] === selectedProduct);
+    if (!seed || !prod || acres.trim() === "" || seedingRate.trim() === "") {
+      console.log("Missing required input", { selectedSeedType, selectedProduct, acres, seedingRate });
+      return;
+    }
 
-  // Log all input values for troubleshooting.
-  console.log("Inputs:", {
-    selectedSeedType,
-    selectedProduct,
-    acres,
-    seedingRate,
-    rateType,
-    overrideSeeds,
-  });
+    const seedsPerLb = overrideSeeds ? parseFloat(overrideSeeds) : parseFloat(seed["Seeds/lb"]);
+    const acresNum = parseFloat(acres);
+    const seedRateNum = parseFloat(seedingRate);
+    let totalSeeds, totalWeight;
+    if (rateType === "lbs") {
+      totalWeight = acresNum * seedRateNum; // seeding rate is lbs/acre
+      totalSeeds = totalWeight * seedsPerLb;  // convert lbs to seeds
+    } else {
+      totalSeeds = acresNum * seedRateNum;    // seeding rate is directly seeds/acre
+      totalWeight = totalSeeds / seedsPerLb;
+    }
 
-  // Guard clause: If required values are missing, log and exit.
-  if (!seed || !prod || acres.trim() === "" || seedingRate.trim() === "") {
-    console.log("Missing required input", {
-      selectedSeedType,
-      selectedProduct,
-      acres,
-      seedingRate,
+    const totalUnits = totalWeight / seed["Lbs/Unit"];
+    const appRate = prod["Application Rate in Ounces"];
+    const totalProductOz = totalUnits * appRate;
+    const totalPackages = Math.ceil(totalProductOz / prod["Package Size"]);
+    const costPerOz = parseFloat(prod["Product Cost per oz"].replace(/[^\d.-]/g, ""));
+    const costPerPackage = parseFloat(prod["Product Cost per Package"].replace(/[^\d.-]/g, ""));
+    const costPerUnit = costPerOz * appRate;
+    const costPerAcre = (costPerUnit * totalUnits) / acresNum;
+    const totalGrowerCost = totalPackages * costPerPackage;
+
+    setResult({
+      "Total Number of Seeds to be Treated": formatNumber(Math.round(totalSeeds)),
+      "Total Weight of Seeds to be Treated": formatNumber(totalWeight),
+      "Total Number of Units to be Treated": formatNumber(totalUnits),
+      "Number of Seeds per Unit": formatNumber(parseFloat(seed["Seeds/Unit"])),
+      "Application Rate": `${formatNumber(appRate, 2)} oz per unit of seed`,
+      "Total Amount of Product Needed": `${formatNumber(totalProductOz, 2)} oz`,
+      "Total Number of Product Packages": `${formatNumber(totalPackages)} ${prod["Product Packaging"].toLowerCase()}`,
+      "Product Cost per Package": `$${formatNumber(costPerPackage, 2)}`,
+      "Total Cost to the Grower": `$${formatNumber(totalGrowerCost, 2)}`,
+      "Product Cost per Ounce": `$${formatNumber(costPerOz, 2)}`,
+      "Product Cost per Unit of Treated Seed": `$${formatNumber(costPerUnit, 2)}`,
+      "Product Cost per Acre": `$${formatNumber(costPerAcre, 2)}`,
     });
-    return;
-  }
-
-  // Parse the numeric inputs.
-  const acresNum = parseFloat(acres);
-  const seedRateNum = parseFloat(seedingRate);
-
-  // Check if numeric conversions resulted in valid numbers.
-  if (isNaN(acresNum) || isNaN(seedRateNum)) {
-    console.error("Parsed number is NaN", { acresNum, seedRateNum });
-    return;
-  }
-
-  // Determine seeds per pound, using the override if provided.
-  const seedsPerLb = overrideSeeds ? parseFloat(overrideSeeds) : parseFloat(seed["Seeds/lb"]);
-  console.log("Parsed values:", { acresNum, seedRateNum, seedsPerLb });
-
-  let totalSeeds: number, totalWeight: number;
-  if (rateType === "lbs") {
-    // For lbs/acre: the seedingRate is interpreted as pounds per acre.
-    totalWeight = acresNum * seedRateNum;
-    totalSeeds = totalWeight * seedsPerLb;
-  } else {
-    // For seeds/acre: seedingRate is directly the number of seeds per acre.
-    totalSeeds = acresNum * seedRateNum;
-    totalWeight = totalSeeds / seedsPerLb;
-  }
-  console.log("Calculated Totals:", { totalSeeds, totalWeight });
-
-  // Further calculations using the seed and product data.
-  const lbsPerUnit = seed["Lbs/Unit"];
-  const totalUnits = totalWeight / lbsPerUnit;
-  const appRate = prod["Application Rate in Ounces"];
-  const totalProductOz = totalUnits * appRate;
-  const totalPackages = Math.ceil(totalProductOz / prod["Package Size"]);
-
-  const costPerOz = parseFloat(prod["Product Cost per oz"].replace(/[^\d.-]/g, ""));
-  const costPerPackage = parseFloat(prod["Product Cost per Package"].replace(/[^\d.-]/g, ""));
-  const costPerUnit = costPerOz * appRate;
-  const costPerAcre = (costPerUnit * totalUnits) / acresNum;
-  const totalGrowerCost = totalPackages * costPerPackage;
-
-  // Create the result object.
-  const output: CalculationResult = {
-    "Total Number of Seeds to be Treated": formatNumber(Math.round(totalSeeds)),
-    "Total Weight of Seeds to be Treated": formatNumber(totalWeight),
-    "Total Number of Units to be Treated": formatNumber(totalUnits),
-    "Number of Seeds per Unit": formatNumber(parseFloat(seed["Seeds/Unit"])),
-    "Application Rate": `${formatNumber(appRate, 2)} oz per unit of seed`,
-    "Total Amount of Product Needed": `${formatNumber(totalProductOz, 2)} oz`,
-    "Total Number of Product Packages": `${formatNumber(totalPackages)} ${prod["Product Packaging"].toLowerCase()}`,
-    "Product Cost per Package": `$${formatNumber(costPerPackage, 2)}`,
-    "Total Cost to the Grower": `$${formatNumber(totalGrowerCost, 2)}`,
-    "Product Cost per Ounce": `$${formatNumber(costPerOz, 2)}`,
-    "Product Cost per Unit of Treated Seed": `$${formatNumber(costPerUnit, 2)}`,
-    "Product Cost per Acre": `$${formatNumber(costPerAcre, 2)}`,
   };
 
-  console.log("Output:", output);
-  setResult(output);
-};
-
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     calculate();
@@ -169,8 +129,8 @@ const calculate = () => {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
-        <h1 className="text-4xl font-extrabold text-green-400 tracking-tight">YieldMaster Solutions</h1>
-        <p className="text-lg text-zinc-400">Planter Box Treatment Calculator</p>
+        {/* Removed logo for now */}
+        <h1 className="text-5xl font-bold text-yellow-400 tracking-tight">YieldMaster Solutions Planter Box Calculator</h1>
       </div>
 
       <div className="flex justify-end">
@@ -275,27 +235,14 @@ const calculate = () => {
       </div>
 
       {result && (
-        <div ref={resultRef} className="mt-6 border border-green-400 bg-zinc-800 text-white shadow-lg rounded p-4">
-          <h2 className="text-center text-2xl font-semibold text-green-300 mb-4">
-            Calculation Results
-          </h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-green-400 text-white">
-                <th className="px-4 py-2 text-left">Metric</th>
-                <th className="px-4 py-2 text-left">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(result).map(([label, value], i) => (
-                <tr key={i} className="border-b border-gray-700">
-                  <td className="px-4 py-2">{label}</td>
-                  <td className="px-4 py-2">{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="text-center my-4">
+        <div ref={resultRef} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(result).map(([label, value], i) => (
+            <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-3">
+              <strong className="block text-sm text-yellow-400 mb-1">{label}</strong>
+              <span className="text-base text-yellow-400">{value}</span>
+            </div>
+          ))}
+          <div className="md:col-span-2 text-center my-4">
             <button
               onClick={downloadPDF}
               className="bg-green-700 hover:bg-green-600 px-6 py-2 rounded-full text-white"
