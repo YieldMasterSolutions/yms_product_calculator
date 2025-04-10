@@ -11,6 +11,7 @@ An Optional Override is included if Number of Seeds per Pound is known.
 4. Push Calculate  
 5. Outputs include detailed product and cost calculations  
 6. Fully responsive UI with dark mode
+7. Print capability to generate PDF of calculations to share with clients through text, email, or printer.
 
 ## License:
 This tool is proprietary to YieldMaster Solutions. For internal use and field sales enablement only.
