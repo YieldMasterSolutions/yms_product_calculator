@@ -1,7 +1,7 @@
-// src/components/CalculatorForm.tsx
 "use client";
 import React, { useState } from "react";
 
+// Define explicit types for the seed and product objects
 interface Seed {
   "Seed Type": string;
   "Seeds/lb": string;
