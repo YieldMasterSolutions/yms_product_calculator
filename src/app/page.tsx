@@ -80,13 +80,15 @@ export default function Home() {
     const seedRateNum = parseFloat(seedingRate);
     let totalSeeds, totalWeight;
     if (rateType === "lbs") {
+      // Seeding rate is in lbs/acre
       totalWeight = acresNum * seedRateNum;
       totalSeeds = totalWeight * seedsPerLb;
     } else {
+      // Seeding rate is in seeds/acre
       totalSeeds = acresNum * seedRateNum;
       totalWeight = totalSeeds / seedsPerLb;
     }
-
+    
     const totalUnits = totalWeight / seed["Lbs/Unit"];
     const appRate = prod["Application Rate in Ounces"];
     const totalProductOz = totalUnits * appRate;
@@ -130,7 +132,7 @@ export default function Home() {
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
         <h1 className="text-5xl font-bold text-yellow-400 tracking-tight">YieldMaster Solutions</h1>
-        <p className="text-lg text-zinc-400">Planter Box Calculator</p>
+        <p className="text-3xl font-bold text-zinc-400">Planter Box Calculator</p>
       </div>
 
       <div className="flex justify-end">
@@ -238,10 +240,8 @@ export default function Home() {
         <div ref={resultRef} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.entries(result).map(([label, value], i) => (
             <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-              <strong className="block text-sm font-bold text-yellow-400 mb-1">
-                {label}
-              </strong>
-              <span>{value}</span>
+              <strong className="block text-xl font-bold text-yellow-400 mb-1">{label}</strong>
+              <span className="text-base">{value}</span>
             </div>
           ))}
           <div className="md:col-span-2 text-center my-4">
