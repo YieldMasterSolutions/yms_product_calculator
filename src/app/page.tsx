@@ -23,35 +23,34 @@ const seedTypes = [
   { "Seed Type": "Peanuts (Medium)", "Seeds/lb": "650", "Seeds/Unit": "32500", "Lbs/Unit": 50 },
   { "Seed Type": "Peanuts (Small)", "Seeds/lb": "1100", "Seeds/Unit": "55000", "Lbs/Unit": 50 },
   { "Seed Type": "Potatoes", "Seeds/lb": "6", "Seeds/Unit": "600", "Lbs/Unit": 100 },
-  
 ];
 
-// Define the complete products array with updated names if needed.
+// Define the complete products array.
 const products = [
   { "Product Name": "SoyFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
   { "Product Name": "PodFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
   { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "gram", "Product Packaging": "Boxes", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
   { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
   { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
-  // Renamed to make it unique:
   { "Product Name": "Nutriquire Liquid Tote", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Totes", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
-  { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 }
+  { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 },
 ];
 
 export default function HomePage() {
   const [productsData, setProductsData] = useState<ProductCalculation[]>([]);
   const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
-  const [totalCost, setTotalCost] = useState<number | null>(null);
+  const [totalUndiscountedCost, setTotalUndiscountedCost] = useState<number | null>(null);
+  const [totalDiscountedCost, setTotalDiscountedCost] = useState<number | null>(null);
 
   const handleFormSubmit = (formData: {
     selectedSeedType: string;
     acres: string;
     selectedProducts: string[];
+    selectedApplicationTypes: string[];
     dealerDiscount: string;
     growerDiscount: string;
   }) => {
     const acresNum = parseFloat(formData.acres);
-    // Filter products that match the selected product names.
     const selectedProductObjects = products.filter(p =>
       formData.selectedProducts.includes(p["Product Name"])
     );
@@ -61,17 +60,29 @@ export default function HomePage() {
     }
     const dealer = formData.dealerDiscount ? parseFloat(formData.dealerDiscount) : 0;
     const grower = formData.growerDiscount ? parseFloat(formData.growerDiscount) : 0;
-    const { productsData, totalCostPerAcre, totalCost } = calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
-    setProductsData(productsData);
+    const { productsData, totalCostPerAcre, totalUndiscountedCost, totalDiscountedCost } = calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
+    
+    // Append the corresponding application type (in parentheses) to each product's name.
+    // Assumption: formData.selectedProducts and formData.selectedApplicationTypes are in matching order.
+    const updatedProductsData = productsData.map((pd) => {
+      const index = formData.selectedProducts.findIndex(name => name === pd.productName);
+      if (index !== -1 && formData.selectedApplicationTypes[index]) {
+        return { ...pd, productName: `${pd.productName} (${formData.selectedApplicationTypes[index]})` };
+      }
+      return pd;
+    });
+    
+    setProductsData(updatedProductsData);
     setTotalCostPerAcre(totalCostPerAcre);
-    setTotalCost(totalCost);
+    setTotalUndiscountedCost(totalUndiscountedCost);
+    setTotalDiscountedCost(totalDiscountedCost);
   };
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
       <div className="text-center mb-6">
         <h1 className="text-5xl font-bold text-yellow-400 tracking-tight">YieldMaster Solutions</h1>
-        <p className="text-3xl font-bold text-zinc-400">Biological Product Calculator</p>
+        <p className="text-3xl font-bold text-zinc-400">Biological Program Calculator</p>
       </div>
       <div className="flex justify-end">
         <button
@@ -82,11 +93,12 @@ export default function HomePage() {
         </button>
       </div>
       <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
-      {productsData.length > 0 && totalCostPerAcre !== null && totalCost !== null && (
+      {productsData.length > 0 && totalCostPerAcre !== null && totalUndiscountedCost !== null && totalDiscountedCost !== null && (
         <ResultsDisplay 
           productsData={productsData} 
           totalCostPerAcre={totalCostPerAcre}
-          totalCost={totalCost}
+          totalUndiscountedCost={totalUndiscountedCost}
+          totalDiscountedCost={totalDiscountedCost}
         />
       )}
     </div>
