@@ -49,12 +49,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
           </p>
         </div>
       ))}
-      {/* Total Costs Box */}
+      {/* Total Costs Box with updated order */}
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Program Cost per Acre</strong>
-        <p>${totalCostPerAcre.toFixed(2)}</p>
-        <strong className="block text-xl font-bold text-yellow-400 mt-4 mb-1">Total Cost</strong>
+        <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Cost</strong>
         <p>${totalCost.toFixed(2)}</p>
+        <strong className="block text-xl font-bold text-yellow-400 mt-4 mb-1">Total Program Cost per Acre</strong>
+        <p>${totalCostPerAcre.toFixed(2)}</p>
       </div>
       {/* Download PDF Button */}
       <div className="text-center my-4">
