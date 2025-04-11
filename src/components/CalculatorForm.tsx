@@ -30,6 +30,8 @@ interface CalculatorFormProps {
     selectedSeedType: string;
     acres: string;
     selectedProducts: string[]; // Array of product names, up to three.
+    dealerDiscount: string;      // percentage as a string, e.g., "2"
+    growerDiscount: string;      // percentage as a string, e.g., "3"
   }) => void;
 }
 
@@ -39,6 +41,8 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
   const [selectedProduct1, setSelectedProduct1] = useState("");
   const [selectedProduct2, setSelectedProduct2] = useState("");
   const [selectedProduct3, setSelectedProduct3] = useState("");
+  const [dealerDiscount, setDealerDiscount] = useState("");
+  const [growerDiscount, setGrowerDiscount] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +52,8 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
       selectedSeedType,
       acres,
       selectedProducts,
+      dealerDiscount,
+      growerDiscount,
     });
   };
 
@@ -55,7 +61,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
     <div className="bg-zinc-800 shadow-lg border border-zinc-700 p-4 rounded">
       <h2 className="text-green-300 text-xl font-semibold mb-4">Calculator Form</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
-        {/* Seed type (aesthetic only) */}
+        {/* Seed Type (aesthetic only) */}
         <div>
           <label className="block mb-1">Seed Type (Aesthetic)</label>
           <select
@@ -71,7 +77,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
             ))}
           </select>
         </div>
-        {/* Acres input */}
+        {/* Acres treated */}
         <div>
           <label className="block mb-1">How many acres to be treated?</label>
           <input
@@ -126,6 +132,28 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
               </option>
             ))}
           </select>
+        </div>
+        {/* Dealer Discount */}
+        <div>
+          <label className="block mb-1">Dealer Discount (%) (optional)</label>
+          <input
+            type="number"
+            value={dealerDiscount}
+            onChange={(e) => setDealerDiscount(e.target.value)}
+            className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
+            placeholder="e.g., 2"
+          />
+        </div>
+        {/* Grower Discount */}
+        <div>
+          <label className="block mb-1">Grower Discount (%) (optional)</label>
+          <input
+            type="number"
+            value={growerDiscount}
+            onChange={(e) => setGrowerDiscount(e.target.value)}
+            className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
+            placeholder="e.g., 3"
+          />
         </div>
         <div className="text-center">
           <button

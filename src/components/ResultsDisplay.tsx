@@ -11,11 +11,7 @@ interface ResultsDisplayProps {
   totalCost: number;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
-  productsData,
-  totalCostPerAcre,
-  totalCost,
-}) => {
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, totalCostPerAcre, totalCost }) => {
   const resultRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = () => {

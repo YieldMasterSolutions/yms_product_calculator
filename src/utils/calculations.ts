@@ -23,12 +23,17 @@ export interface ProductCalculation {
   individualCostPerAcre: number;
 }
 
-// Calculate detailed data for one product based on the number of acres.
-export function calculateProductData(acres: number, product: Product): ProductCalculation {
+// For one product, calculate cost data using the combined discount.
+// The discountFactor is computed as 1 - ((dealerDiscount + growerDiscount) / 100).
+export function calculateProductData(
+  acres: number,
+  product: Product,
+  dealerDiscount: number = 0,
+  growerDiscount: number = 0
+): ProductCalculation {
   let applicationRate: number | undefined;
   let costPerUnit: number | undefined;
   
-  // Determine the application rate and the cost per unit from available fields.
   if (product["Application Rate in Fluid Ounces"]) {
     applicationRate = product["Application Rate in Fluid Ounces"];
     if (product["Product Cost per fl oz"]) {
@@ -46,34 +51,40 @@ export function calculateProductData(acres: number, product: Product): ProductCa
   const packageSize = product["Package Size"];
   const costPerPackage = parseFloat(product["Product Cost per Package"].replace(/[^\d.-]/g, ""));
   
-  // Calculate the total amount of product required based on acres and application rate.
+  // Calculate total product required (in the same unit as the application rate)
   const requiredTotal = acres * (applicationRate || 0);
-  // Determine the number of packages needed (round up).
+  // Number of packages needed (round up)
   const packagesNeeded = Math.ceil(requiredTotal / packageSize);
-  // Total cost to grower is calculated by the number of packages multiplied by the package cost.
+  // Total cost to grower before discounts:
   const totalCostToGrower = packagesNeeded * costPerPackage;
-  // Individual cost per acre is the application rate times the cost per unit.
+  // Individual cost per acre before discount
   const individualCostPerAcre = (applicationRate || 0) * (costPerUnit || 0);
   
-  // Build a string showing packaging details with dashes.
-  // e.g.: "32 fl oz - Jugs"
+  // Build product packaging string with dashes.
   const productPackageString = `${packageSize} ${product["Package Units"]} - ${product["Product Packaging"]}`;
+  
+  // Calculate discount factor from dealer and grower percentages.
+  const discountFactor = 1 - ((dealerDiscount + growerDiscount) / 100);
   
   return {
     productName: product["Product Name"],
     packagesNeeded,
     productPackageString,
-    totalCostToGrower,
-    individualCostPerAcre,
+    totalCostToGrower: totalCostToGrower * discountFactor,
+    individualCostPerAcre: individualCostPerAcre * discountFactor,
   };
 }
 
 // Calculate costs for an array of selected products.
 export function calculateProductCosts(
   acres: number,
-  selectedProducts: Product[]
+  selectedProducts: Product[],
+  dealerDiscount: number = 0,
+  growerDiscount: number = 0
 ): { productsData: ProductCalculation[]; totalCostPerAcre: number; totalCost: number } {
-  const productsData = selectedProducts.map(product => calculateProductData(acres, product));
+  const productsData = selectedProducts.map(product =>
+    calculateProductData(acres, product, dealerDiscount, growerDiscount)
+  );
   const totalCostPerAcre = productsData.reduce((sum, p) => sum + p.individualCostPerAcre, 0);
   const totalCost = productsData.reduce((sum, p) => sum + p.totalCostToGrower, 0);
   return { productsData, totalCostPerAcre, totalCost };
