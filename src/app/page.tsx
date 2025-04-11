@@ -1,8 +1,10 @@
+// src/app/page.tsx
 "use client";
 import React, { useState } from "react";
 import { CalculatorForm } from "../components/CalculatorForm";
 import { ResultsDisplay } from "../components/ResultsDisplay";
-import { calculateProductCosts, ProductCostResult } from "../utils/calculations";
+import { calculateProductCosts } from "../utils/calculations";
+import { ProductCalculation } from "../utils/calculations";
 
 // Define the complete seedTypes array (for aesthetics)
 const seedTypes = [
@@ -22,19 +24,20 @@ const seedTypes = [
   { "Seed Type": "Wheat", "Seeds/lb": "18000", "Seeds/Unit": "750000", "Lbs/Unit": 50 }
 ];
 
-// Define the complete products array with new products and updated keys
+// Define the complete products array with updated names if needed.
 const products = [
   { "Product Name": "SoyFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
   { "Product Name": "PodFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
   { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "grams", "Product Packaging": "Box", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
   { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
   { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  // Renamed the larger container to be unique:
   { "Product Name": "Nutriquire Liquid Tote", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Tote", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
   { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 }
 ];
 
 export default function HomePage() {
-  const [individualCosts, setIndividualCosts] = useState<ProductCostResult[]>([]);
+  const [productsData, setProductsData] = useState<ProductCalculation[]>([]);
   const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
 
   const handleFormSubmit = (formData: {
@@ -43,14 +46,16 @@ export default function HomePage() {
     selectedProducts: string[];
   }) => {
     const acresNum = parseFloat(formData.acres);
-    // Filter products that match the selected product names
-    const selectedProductObjects = products.filter(p => formData.selectedProducts.includes(p["Product Name"]));
+    // Filter products that match the selected product names.
+    const selectedProductObjects = products.filter(p =>
+      formData.selectedProducts.includes(p["Product Name"])
+    );
     if (selectedProductObjects.length === 0 || isNaN(acresNum)) {
       console.log("Missing required input", formData);
       return;
     }
-    const { individualCosts, totalCostPerAcre } = calculateProductCosts(acresNum, selectedProductObjects);
-    setIndividualCosts(individualCosts);
+    const { productsData, totalCostPerAcre } = calculateProductCosts(acresNum, selectedProductObjects);
+    setProductsData(productsData);
     setTotalCostPerAcre(totalCostPerAcre);
   };
 
@@ -69,11 +74,8 @@ export default function HomePage() {
         </button>
       </div>
       <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
-      {individualCosts.length > 0 && totalCostPerAcre !== null && (
-        <ResultsDisplay result={{
-          individualCosts: individualCosts.map(ic => `${ic.productName}: $${ic.costPerAcre.toFixed(2)} per acre`).join('\n'),
-          "Total Program Cost per Acre": `$${totalCostPerAcre.toFixed(2)}`
-        }} />
+      {productsData.length > 0 && totalCostPerAcre !== null && (
+        <ResultsDisplay productsData={productsData} totalCostPerAcre={totalCostPerAcre} />
       )}
     </div>
   );

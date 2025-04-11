@@ -1,7 +1,8 @@
+// src/components/CalculatorForm.tsx
 "use client";
 import React, { useState } from "react";
 
-// Define explicit types for the seed and product objects
+// Define explicit types for the seed and product objects.
 interface Seed {
   "Seed Type": string;
   "Seeds/lb": string;
@@ -41,7 +42,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Combine the three product selections and filter out empty strings
+    // Combine the three product selections and filter out empty strings.
     const selectedProducts = [selectedProduct1, selectedProduct2, selectedProduct3].filter(p => p !== "");
     onSubmit({
       selectedSeedType,
