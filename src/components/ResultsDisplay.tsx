@@ -69,3 +69,5 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         </button>
       </div>
     </div>
+  );
+};
