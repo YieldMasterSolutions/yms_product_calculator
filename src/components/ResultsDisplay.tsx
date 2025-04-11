@@ -5,7 +5,6 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { ProductCalculation } from "../utils/calculations";
 
-// Updated interface to include both undiscounted and discounted totals.
 interface ResultsDisplayProps {
   productsData: ProductCalculation[];
   totalCostPerAcre: number;
@@ -39,16 +38,12 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     <div ref={resultRef} className="mt-6 space-y-6">
       {/* Heading for individual product costs */}
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-2xl font-bold text-yellow-400 mb-1">
-          Individual Product Costs
-        </strong>
+        <strong className="block text-2xl font-bold text-yellow-400 mb-1">Individual Product Costs</strong>
       </div>
       {/* Render a box for each product */}
       {productsData.map((product, i) => (
         <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-          <strong className="block text-xl font-bold text-yellow-400 mb-1">
-            {product.productName}
-          </strong>
+          <strong className="block text-xl font-bold text-yellow-400 mb-1">{product.productName}</strong>
           <p className="mb-1">
             Total Product Units to Order = {product.packagesNeeded} - {product.productPackageString}
           </p>
@@ -68,8 +63,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         <strong className="block text-2xl font-bold text-yellow-400 mb-1">
           Total YMS Biological Program Cost
         </strong>
-        <p>Undiscounted Total Cost = ${totalUndiscountedCost.toFixed(2)}</p>
-        <p>Total Discounted Total Cost = ${totalDiscountedCost.toFixed(2)}</p>
+        <p>Total Program Cost (MSRP with No Discounts) = ${totalUndiscountedCost.toFixed(2)}</p>
+        <p>Total Program Cost (with Discounts) = ${totalDiscountedCost.toFixed(2)}</p>
         <p>Total Program Cost per Acre = ${totalCostPerAcre.toFixed(2)}</p>
       </div>
       {/* Download PDF Button */}
