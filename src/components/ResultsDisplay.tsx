@@ -1,69 +1,104 @@
-// src/components/ResultsDisplay.tsx
+// src/app/page.tsx
 "use client";
-import React, { useRef } from "react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+import React, { useState } from "react";
+import { CalculatorForm } from "../components/CalculatorForm";
+import { ResultsDisplay } from "../components/ResultsDisplay";
+import { calculateProductCosts } from "../utils/calculations";
 import { ProductCalculation } from "../utils/calculations";
 
-interface ResultsDisplayProps {
-  productsData: ProductCalculation[];
-  totalCostPerAcre: number;
-  totalCost: number;
-}
+// Updated seedTypes array (for aesthetics)
+const seedTypes = [
+  { "Seed Type": "Corn", "Seeds/lb": "1778", "Seeds/Unit": "80000", "Lbs/Unit": 45 },
+  { "Seed Type": "Soybeans", "Seeds/lb": "2800", "Seeds/Unit": "140000", "Lbs/Unit": 50 },
+  { "Seed Type": "Alfalfa", "Seeds/lb": "210000", "Seeds/Unit": "10500000", "Lbs/Unit": 50 },
+  { "Seed Type": "Wheat", "Seeds/lb": "18000", "Seeds/Unit": "750000", "Lbs/Unit": 50 },
+  { "Seed Type": "Barley", "Seeds/lb": "14500", "Seeds/Unit": "725000", "Lbs/Unit": 50 },
+  { "Seed Type": "Canola", "Seeds/lb": "130000", "Seeds/Unit": "6500000", "Lbs/Unit": 50 },
+  { "Seed Type": "Flax", "Seeds/lb": "85000", "Seeds/Unit": "4250000", "Lbs/Unit": 50 },
+  { "Seed Type": "Lentils", "Seeds/lb": "16500", "Seeds/Unit": "825000", "Lbs/Unit": 50 },
+  { "Seed Type": "Peas", "Seeds/lb": "4000", "Seeds/Unit": "200000", "Lbs/Unit": 50 },
+  { "Seed Type": "Sorghum", "Seeds/lb": "15500", "Seeds/Unit": "775000", "Lbs/Unit": 50 },
+  { "Seed Type": "Sugarbeets", "Seeds/lb": "2000", "Seeds/Unit": "100000", "Lbs/Unit": 50 },
+  { "Seed Type": "Sunflowers", "Seeds/lb": "6500", "Seeds/Unit": "325000", "Lbs/Unit": 50 },
+  { "Seed Type": "Peanuts (Medium)", "Seeds/lb": "650", "Seeds/Unit": "32500", "Lbs/Unit": 50 },
+  { "Seed Type": "Peanuts (Small)", "Seeds/lb": "1100", "Seeds/Unit": "55000", "Lbs/Unit": 50 },
+  { "Seed Type": "Potatoes", "Seeds/lb": "6", "Seeds/Unit": "600", "Lbs/Unit": 100 },
+];
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, totalCostPerAcre, totalCost }) => {
-  const resultRef = useRef<HTMLDivElement>(null);
+// Updated products array.
+const products = [
+  { "Product Name": "SoyFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
+  { "Product Name": "PodFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
+  { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "gram", "Product Packaging": "Boxes", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
+  { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
+  { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  // Renamed to make it unique:
+  { "Product Name": "Nutriquire Liquid Tote", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Totes", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 }
+];
 
-  const downloadPDF = () => {
-    if (!resultRef.current) return;
-    html2canvas(resultRef.current, { scale: window.devicePixelRatio || 2 }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "pt", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 20;
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
-      pdf.save("YieldMaster_Calculation.pdf");
+export default function HomePage() {
+  const [productsData, setProductsData] = useState<ProductCalculation[]>([]);
+  const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
+  const [totalCost, setTotalCost] = useState<number | null>(null);
+
+  const handleFormSubmit = (formData: {
+    selectedSeedType: string;
+    acres: string;
+    selectedProducts: string[];
+    selectedApplicationTypes: string[];
+    dealerDiscount: string;
+    growerDiscount: string;
+  }) => {
+    const acresNum = parseFloat(formData.acres);
+    const selectedProductObjects = products.filter(p =>
+      formData.selectedProducts.includes(p["Product Name"])
+    );
+    if (selectedProductObjects.length === 0 || isNaN(acresNum)) {
+      console.log("Missing required input", formData);
+      return;
+    }
+    const dealer = formData.dealerDiscount ? parseFloat(formData.dealerDiscount) : 0;
+    const grower = formData.growerDiscount ? parseFloat(formData.growerDiscount) : 0;
+    const { productsData, totalCostPerAcre, totalCost } = calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
+    
+    // Append the corresponding application type (in parentheses) to each product's name.
+    // Assumption: formData.selectedProducts and formData.selectedApplicationTypes are in matching order.
+    const updatedProductsData = productsData.map((pd) => {
+      const index = formData.selectedProducts.findIndex(name => name === pd.productName);
+      if (index !== -1 && formData.selectedApplicationTypes[index]) {
+        return { ...pd, productName: `${pd.productName} (${formData.selectedApplicationTypes[index]})` };
+      }
+      return pd;
     });
+    
+    setProductsData(updatedProductsData);
+    setTotalCostPerAcre(totalCostPerAcre);
+    setTotalCost(totalCost);
   };
 
   return (
-    <div ref={resultRef} className="mt-6 space-y-6">
-      {/* Heading for individual product costs */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-2xl font-bold text-yellow-400 mb-1">Individual Product Costs</strong>
+    <div className="max-w-5xl mx-auto p-6 space-y-8 bg-gradient-to-b from-zinc-950 to-zinc-900 text-white min-h-screen">
+      <div className="text-center mb-6">
+        <h1 className="text-5xl font-bold text-yellow-400 tracking-tight">YieldMaster Solutions</h1>
+        <p className="text-3xl font-bold text-zinc-400">Biological Program Calculator</p>
       </div>
-      {/* Render a box for each product */}
-      {productsData.map((product, i) => (
-        <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-          <strong className="block text-xl font-bold text-yellow-400 mb-1">{product.productName}</strong>
-          <p className="mb-1">
-            Total Product Units Needed = {product.packagesNeeded} - {product.productPackageString}
-          </p>
-          <p className="mb-1">
-            Total Cost to Grower = ${product.totalCostToGrower.toFixed(2)}
-          </p>
-          <p>
-            Individual Cost per Acre = ${product.individualCostPerAcre.toFixed(2)}
-          </p>
-        </div>
-      ))}
-      {/* Summary box for total program costs */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Program Costs</strong>
-        <p>Total Cost = ${totalCost.toFixed(2)}</p>
-        <p>Total Program Cost per Acre = ${totalCostPerAcre.toFixed(2)}</p>
-      </div>
-      {/* Download PDF Button */}
-      <div className="text-center my-4">
+      <div className="flex justify-end">
         <button
-          onClick={downloadPDF}
-          className="bg-green-700 hover:bg-green-600 px-6 py-2 rounded-full text-white"
+          className="text-sm text-zinc-400 hover:text-white border border-zinc-600 px-3 py-1 rounded"
+          onClick={() => document.documentElement.classList.toggle("dark")}
         >
-          Download PDF
+          Toggle Theme
         </button>
       </div>
+      <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
+      {productsData.length > 0 && totalCostPerAcre !== null && totalCost !== null && (
+        <ResultsDisplay 
+          productsData={productsData} 
+          totalCostPerAcre={totalCostPerAcre}
+          totalCost={totalCost}
+        />
+      )}
     </div>
   );
-};
+}
