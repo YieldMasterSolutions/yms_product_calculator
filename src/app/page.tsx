@@ -1,7 +1,8 @@
+// src/app/page.tsx
 "use client";
 import React, { useState } from "react";
 import { CalculatorForm } from "../components/CalculatorForm";
-import ResultsDisplay from "../components/ResultsDisplay";  // Changed from named import to default import
+import ResultsDisplay from "../components/ResultsDisplay"; // Using default import
 import { calculateProductCosts } from "../utils/calculations";
 import { ProductCalculation } from "../utils/calculations";
 
@@ -31,6 +32,7 @@ const products = [
   { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "gram", "Product Packaging": "Boxes", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
   { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
   { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  // Renamed to make it unique:
   { "Product Name": "Nutriquire Liquid Tote", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Totes", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
   { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 },
 ];
@@ -59,7 +61,8 @@ export default function HomePage() {
     }
     const dealer = formData.dealerDiscount ? parseFloat(formData.dealerDiscount) : 0;
     const grower = formData.growerDiscount ? parseFloat(formData.growerDiscount) : 0;
-    const { productsData, totalCostPerAcre, totalUndiscountedCost, totalDiscountedCost } = calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
+    const { productsData, totalCostPerAcre, totalUndiscountedCost, totalDiscountedCost } =
+      calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
     
     // Append the corresponding application type (in parentheses) to each product's name.
     // Assumption: formData.selectedProducts and formData.selectedApplicationTypes are in matching order.
