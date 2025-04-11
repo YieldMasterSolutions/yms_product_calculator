@@ -1,67 +1,60 @@
 // src/utils/calculations.ts
-interface Seed {
-  "Seed Type": string;
-  "Seeds/lb": string;
-  "Seeds/Unit": string;
-  "Lbs/Unit": number;
-}
 
+// Define the Product interface to match the structure used in your products array.
 interface Product {
   "Product Name": string;
   "Package Size": number;
   "Package Units": string;
   "Product Packaging": string;
   "Product Cost per Package": string;
-  "Product Cost per oz": string;
-  "Application Rate in Ounces": number;
+  "Product Cost per fl oz"?: string;
+  "Product Cost per oz"?: string;
+  "Product Cost per gram"?: string;
+  "Application Rate in Fluid Ounces"?: number;
+  "Application Rate in Grams"?: number;
 }
 
-export interface CalculationResult {
-  [key: string]: string | number;
+// This interface defines the structure for individual product cost results.
+export interface ProductCostResult {
+  productName: string;
+  costPerAcre: number;
 }
 
-export function calculateMetrics(
-  seed: Seed,
-  product: Product,
+// Export the calculateProductCosts function so that it is available for import.
+export function calculateProductCosts(
   acres: number,
-  seedingRate: number,
-  rateType: "seeds" | "lbs",
-  overrideSeeds?: number
-): CalculationResult {
-  const seedsPerLb = overrideSeeds ? overrideSeeds : parseFloat(seed["Seeds/lb"]);
-  let totalSeeds: number;
-  let totalWeight: number;
+  selectedProducts: Product[]
+): { individualCosts: ProductCostResult[]; totalCostPerAcre: number } {
+  const individualCosts: ProductCostResult[] = selectedProducts.map((product) => {
+    let costPerUnit: number | null = null;
+    // Check for cost per fluid ounce, per ounce, or per gram.
+    if (product["Product Cost per fl oz"]) {
+      costPerUnit = parseFloat(product["Product Cost per fl oz"].replace(/[^\d.-]/g, ""));
+    } else if (product["Product Cost per oz"]) {
+      costPerUnit = parseFloat(product["Product Cost per oz"].replace(/[^\d.-]/g, ""));
+    } else if (product["Product Cost per gram"]) {
+      costPerUnit = parseFloat(product["Product Cost per gram"].replace(/[^\d.-]/g, ""));
+    }
+    
+    let applicationRate: number | null = null;
+    // Check for application rate in fluid ounces or in grams.
+    if (product["Application Rate in Fluid Ounces"]) {
+      applicationRate = product["Application Rate in Fluid Ounces"];
+    } else if (product["Application Rate in Grams"]) {
+      applicationRate = product["Application Rate in Grams"];
+    }
+    
+    // If any required value is missing, return zero cost.
+    if (costPerUnit === null || applicationRate === null) {
+      return { productName: product["Product Name"], costPerAcre: 0 };
+    }
+    
+    // Calculate cost per acre for the product.
+    const costPerAcre = costPerUnit * applicationRate;
+    return { productName: product["Product Name"], costPerAcre };
+  });
 
-  if (rateType === "lbs") {
-    totalWeight = acres * seedingRate;
-    totalSeeds = totalWeight * seedsPerLb;
-  } else {
-    totalSeeds = acres * seedingRate;
-    totalWeight = totalSeeds / seedsPerLb;
-  }
-
-  const totalUnits = totalWeight / seed["Lbs/Unit"];
-  const appRate = product["Application Rate in Ounces"];
-  const totalProductOz = totalUnits * appRate;
-  const totalPackages = Math.ceil(totalProductOz / product["Package Size"]);
-  const costPerOz = parseFloat(product["Product Cost per oz"].replace(/[^\d.-]/g, ""));
-  const costPerPackage = parseFloat(product["Product Cost per Package"].replace(/[^\d.-]/g, ""));
-  const costPerUnit = costPerOz * appRate;
-  const costPerAcre = (costPerUnit * totalUnits) / acres;
-  const totalGrowerCost = totalPackages * costPerPackage;
-
-  return {
-    "Total Number of Seeds to be Treated": Math.round(totalSeeds),
-    "Total Weight of Seeds to be Treated": totalWeight,
-    "Total Number of Units to be Treated": totalUnits,
-    "Number of Seeds per Unit": parseFloat(seed["Seeds/Unit"]),
-    "Application Rate": `${appRate.toFixed(2)} oz per unit of seed`,
-    "Total Amount of Product Needed": `${totalProductOz.toFixed(2)} oz`,
-    "Total Number of Product Packages": `${totalPackages} ${product["Product Packaging"].toLowerCase()}`,
-    "Product Cost per Package": `$${costPerPackage.toFixed(2)}`,
-    "Total Cost to the Grower": `$${totalGrowerCost.toFixed(2)}`,
-    "Product Cost per Ounce": `$${costPerOz.toFixed(2)}`,
-    "Product Cost per Unit of Treated Seed": `$${costPerUnit.toFixed(2)}`,
-    "Product Cost per Acre": `$${costPerAcre.toFixed(2)}`,
-  };
+  // Total cost per acre is the sum of the individual costs.
+  const totalCostPerAcre = individualCosts.reduce((sum, item) => sum + item.costPerAcre, 0);
+  return { individualCosts, totalCostPerAcre };
 }
