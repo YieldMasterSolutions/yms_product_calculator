@@ -8,20 +8,22 @@ import { ProductCalculation } from "../utils/calculations";
 
 // Define the complete seedTypes array (for aesthetics)
 const seedTypes = [
+  { "Seed Type": "Corn", "Seeds/lb": "1778", "Seeds/Unit": "80000", "Lbs/Unit": 45 },
+  { "Seed Type": "Soybeans", "Seeds/lb": "2800", "Seeds/Unit": "140000", "Lbs/Unit": 50 },
   { "Seed Type": "Alfalfa", "Seeds/lb": "210000", "Seeds/Unit": "10500000", "Lbs/Unit": 50 },
+  { "Seed Type": "Wheat", "Seeds/lb": "18000", "Seeds/Unit": "750000", "Lbs/Unit": 50 },
   { "Seed Type": "Barley", "Seeds/lb": "14500", "Seeds/Unit": "725000", "Lbs/Unit": 50 },
   { "Seed Type": "Canola", "Seeds/lb": "130000", "Seeds/Unit": "6500000", "Lbs/Unit": 50 },
-  { "Seed Type": "Corn", "Seeds/lb": "1778", "Seeds/Unit": "80000", "Lbs/Unit": 45 },
   { "Seed Type": "Flax", "Seeds/lb": "85000", "Seeds/Unit": "4250000", "Lbs/Unit": 50 },
   { "Seed Type": "Lentils", "Seeds/lb": "16500", "Seeds/Unit": "825000", "Lbs/Unit": 50 },
   { "Seed Type": "Peas", "Seeds/lb": "4000", "Seeds/Unit": "200000", "Lbs/Unit": 50 },
   { "Seed Type": "Sorghum", "Seeds/lb": "15500", "Seeds/Unit": "775000", "Lbs/Unit": 50 },
-  { "Seed Type": "Soybeans", "Seeds/lb": "2800", "Seeds/Unit": "140000", "Lbs/Unit": 50 },
   { "Seed Type": "Sugarbeets", "Seeds/lb": "2000", "Seeds/Unit": "100000", "Lbs/Unit": 50 },
-  { "Seed Type": "Sunflower", "Seeds/lb": "6500", "Seeds/Unit": "325000", "Lbs/Unit": 50 },
+  { "Seed Type": "Sunflowers", "Seeds/lb": "6500", "Seeds/Unit": "325000", "Lbs/Unit": 50 },
   { "Seed Type": "Peanuts (Medium)", "Seeds/lb": "650", "Seeds/Unit": "32500", "Lbs/Unit": 50 },
   { "Seed Type": "Peanuts (Small)", "Seeds/lb": "1100", "Seeds/Unit": "55000", "Lbs/Unit": 50 },
-  { "Seed Type": "Wheat", "Seeds/lb": "18000", "Seeds/Unit": "750000", "Lbs/Unit": 50 }
+  { "Seed Type": "Potatoes", "Seeds/lb": "6", "Seeds/Unit": "600", "Lbs/Unit": 100 },
+  
 ];
 
 // Define the complete products array with updated names if needed.
@@ -45,6 +47,8 @@ export default function HomePage() {
     selectedSeedType: string;
     acres: string;
     selectedProducts: string[];
+    dealerDiscount: string;
+    growerDiscount: string;
   }) => {
     const acresNum = parseFloat(formData.acres);
     // Filter products that match the selected product names.
@@ -55,7 +59,9 @@ export default function HomePage() {
       console.log("Missing required input", formData);
       return;
     }
-    const { productsData, totalCostPerAcre, totalCost } = calculateProductCosts(acresNum, selectedProductObjects);
+    const dealer = formData.dealerDiscount ? parseFloat(formData.dealerDiscount) : 0;
+    const grower = formData.growerDiscount ? parseFloat(formData.growerDiscount) : 0;
+    const { productsData, totalCostPerAcre, totalCost } = calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
     setProductsData(productsData);
     setTotalCostPerAcre(totalCostPerAcre);
     setTotalCost(totalCost);
