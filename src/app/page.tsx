@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { CalculatorForm } from "../components/CalculatorForm";
 import { ResultsDisplay } from "../components/ResultsDisplay";
-import { calculateMetrics, CalculationResult } from "../utils/calculations";
+import { calculateProductCosts, ProductCostResult } from "../utils/calculations";
 
-// Define the complete seedTypes array
+// Define the complete seedTypes array (for aesthetics)
 const seedTypes = [
   { "Seed Type": "Alfalfa", "Seeds/lb": "210000", "Seeds/Unit": "10500000", "Lbs/Unit": 50 },
   { "Seed Type": "Barley", "Seeds/lb": "14500", "Seeds/Unit": "725000", "Lbs/Unit": 50 },
@@ -22,41 +22,36 @@ const seedTypes = [
   { "Seed Type": "Wheat", "Seeds/lb": "18000", "Seeds/Unit": "750000", "Lbs/Unit": 50 }
 ];
 
-// Define the complete products array
+// Define the complete products array with new products and updated keys
 const products = [
-  { "Product Name": "DUST Pail", "Package Size": 112.0, "Package Units": "oz", "Product Packaging": "Pails", "Product Cost per Package": "$60.00", "Product Cost per oz": "$1.87", "Application Rate in Ounces": 0.5 },
-  { "Product Name": "DUST Pail", "Package Size": 224.0, "Package Units": "oz", "Product Packaging": "Pails", "Product Cost per Package": "$120.00", "Product Cost per oz": "$1.87", "Application Rate in Ounces": 0.5 },
-  { "Product Name": "DUST Pouch", "Package Size": 16.0, "Package Units": "oz", "Product Packaging": "Pouches", "Product Cost per Package": "$15.50", "Product Cost per oz": "$0.97", "Application Rate in Ounces": 0.5 },
-  { "Product Name": "OmniSync Pail", "Package Size": 320.0, "Package Units": "oz", "Product Packaging": "Pails", "Product Cost per Package": "$952.00", "Product Cost per oz": "$2.98", "Application Rate in Ounces": 2.0 },
-  { "Product Name": "Nutriquire + Terrasym450 + DUST Corn", "Package Size": 12.5, "Package Units": "oz", "Product Packaging": "Pouches", "Product Cost per Package": "$882.05", "Product Cost per oz": "$70.56", "Application Rate in Ounces": 0.5 },
-  { "Product Name": "Nutriquire + Terrasym401 + DUST Soybean", "Package Size": 20.0, "Package Units": "oz", "Product Packaging": "Pouches", "Product Cost per Package": "$598.00", "Product Cost per oz": "$29.90", "Application Rate in Ounces": 0.5 },
-  { "Product Name": "Terrasym 450 + DUST + TS201 for Corn Root Worm", "Package Size": 25.0, "Package Units": "oz", "Product Packaging": "Pouches", "Product Cost per Package": "$1,740.50", "Product Cost per oz": "$69.62", "Application Rate in Ounces": 0.5 }
+  { "Product Name": "SoyFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
+  { "Product Name": "PodFX", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$240.60", "Product Cost per fl oz": "$0.75", "Application Rate in Fluid Ounces": 16 },
+  { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "grams", "Product Packaging": "Box", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
+  { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
+  { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  { "Product Name": "Nutriquire Liquid", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Tote", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
+  { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 }
 ];
 
 export default function HomePage() {
-  const [result, setResult] = useState<CalculationResult | null>(null);
+  const [individualCosts, setIndividualCosts] = useState<ProductCostResult[]>([]);
+  const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
 
   const handleFormSubmit = (formData: {
     selectedSeedType: string;
     acres: string;
-    selectedProduct: string;
-    seedingRate: string;
-    rateType: "seeds" | "lbs";
-    overrideSeeds: string;
+    selectedProducts: string[];
   }) => {
-    const seed = seedTypes.find((s) => s["Seed Type"] === formData.selectedSeedType);
-    const product = products.find((p) => p["Product Name"] === formData.selectedProduct);
-    if (!seed || !product || !formData.acres || !formData.seedingRate) {
+    const acresNum = parseFloat(formData.acres);
+    // Filter products that match the selected product names
+    const selectedProductObjects = products.filter(p => formData.selectedProducts.includes(p["Product Name"]));
+    if (selectedProductObjects.length === 0 || isNaN(acresNum)) {
       console.log("Missing required input", formData);
       return;
     }
-
-    const acresNum = parseFloat(formData.acres);
-    const seedingRateNum = parseFloat(formData.seedingRate);
-    const overrideSeedsNum = formData.overrideSeeds ? parseFloat(formData.overrideSeeds) : undefined;
-
-    const calcResult = calculateMetrics(seed, product, acresNum, seedingRateNum, formData.rateType, overrideSeedsNum);
-    setResult(calcResult);
+    const { individualCosts, totalCostPerAcre } = calculateProductCosts(acresNum, selectedProductObjects);
+    setIndividualCosts(individualCosts);
+    setTotalCostPerAcre(totalCostPerAcre);
   };
 
   return (
@@ -74,7 +69,12 @@ export default function HomePage() {
         </button>
       </div>
       <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
-      {result && <ResultsDisplay result={result} />}
+      {individualCosts.length > 0 && totalCostPerAcre !== null && (
+        <ResultsDisplay result={{
+          individualCosts: individualCosts.map(ic => `${ic.productName}: $${ic.costPerAcre.toFixed(2)} per acre`).join('\n'),
+          "Total Program Cost per Acre": `$${totalCostPerAcre.toFixed(2)}`
+        }} />
+      )}
     </div>
   );
 }

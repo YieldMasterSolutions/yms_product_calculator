@@ -15,8 +15,11 @@ interface Product {
   "Package Units": string;
   "Product Packaging": string;
   "Product Cost per Package": string;
-  "Product Cost per oz": string;
-  "Application Rate in Ounces": number;
+  "Product Cost per fl oz"?: string;
+  "Product Cost per oz"?: string;
+  "Product Cost per gram"?: string;
+  "Application Rate in Fluid Ounces"?: number;
+  "Application Rate in Grams"?: number;
 }
 
 interface CalculatorFormProps {
@@ -25,39 +28,35 @@ interface CalculatorFormProps {
   onSubmit: (formData: {
     selectedSeedType: string;
     acres: string;
-    selectedProduct: string;
-    seedingRate: string;
-    rateType: "seeds" | "lbs";
-    overrideSeeds: string;
+    selectedProducts: string[]; // Array of product names (up to three)
   }) => void;
 }
 
 export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, products, onSubmit }) => {
   const [selectedSeedType, setSelectedSeedType] = useState("");
   const [acres, setAcres] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
-  const [seedingRate, setSeedingRate] = useState("");
-  const [rateType, setRateType] = useState<"seeds" | "lbs">("seeds");
-  const [overrideSeeds, setOverrideSeeds] = useState("");
+  const [selectedProduct1, setSelectedProduct1] = useState("");
+  const [selectedProduct2, setSelectedProduct2] = useState("");
+  const [selectedProduct3, setSelectedProduct3] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Combine the three product selections and filter out empty strings
+    const selectedProducts = [selectedProduct1, selectedProduct2, selectedProduct3].filter(p => p !== "");
     onSubmit({
       selectedSeedType,
       acres,
-      selectedProduct,
-      seedingRate,
-      rateType,
-      overrideSeeds,
+      selectedProducts,
     });
   };
 
   return (
     <div className="bg-zinc-800 shadow-lg border border-zinc-700 p-4 rounded">
       <h2 className="text-green-300 text-xl font-semibold mb-4">Calculator Form</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
+        {/* Seed type (aesthetic only) */}
         <div>
-          <label className="block mb-1">Seed Type</label>
+          <label className="block mb-1">Seed Type (Aesthetic)</label>
           <select
             value={selectedSeedType}
             onChange={(e) => setSelectedSeedType(e.target.value)}
@@ -71,8 +70,9 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
             ))}
           </select>
         </div>
+        {/* Acres input */}
         <div>
-          <label className="block mb-1">How many acres to be planted?</label>
+          <label className="block mb-1">How many acres to be treated?</label>
           <input
             type="number"
             value={acres}
@@ -80,11 +80,12 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
             className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
           />
         </div>
-        <div className="md:col-span-2">
-          <label className="block mb-1">Product</label>
+        {/* Product selectors */}
+        <div>
+          <label className="block mb-1">Select Product 1</label>
           <select
-            value={selectedProduct}
-            onChange={(e) => setSelectedProduct(e.target.value)}
+            value={selectedProduct1}
+            onChange={(e) => setSelectedProduct1(e.target.value)}
             className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
           >
             <option value="">Select Product</option>
@@ -96,41 +97,36 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ seedTypes, produ
           </select>
         </div>
         <div>
-          <label className="block mb-1">Seeding Rate</label>
-          <input
-            type="number"
-            value={seedingRate}
-            onChange={(e) => setSeedingRate(e.target.value)}
-            className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Rate Type</label>
+          <label className="block mb-1">Select Product 2 (optional)</label>
           <select
-            value={rateType}
-            onChange={(e) => setRateType(e.target.value as "seeds" | "lbs")}
+            value={selectedProduct2}
+            onChange={(e) => setSelectedProduct2(e.target.value)}
             className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
           >
-            <option value="seeds">Seeds/Acre</option>
-            <option value="lbs">Lbs/Acre</option>
+            <option value="">Select Product</option>
+            {products.map((p, i) => (
+              <option key={i} value={p["Product Name"]}>
+                {`${p["Product Name"]} - ${p["Package Size"]} ${p["Package Units"]} - ${p["Product Packaging"]}`}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="md:col-span-2">
-          <label className="block mb-1">Override Seeds per Pound (optional)</label>
-          {selectedSeedType && (
-            <div className="text-sm text-zinc-400 mb-1">
-              Default Seeds/lb for {selectedSeedType}:{" "}
-              {seedTypes.find((s) => s["Seed Type"] === selectedSeedType)?.["Seeds/lb"]}
-            </div>
-          )}
-          <input
-            type="number"
-            value={overrideSeeds}
-            onChange={(e) => setOverrideSeeds(e.target.value)}
+        <div>
+          <label className="block mb-1">Select Product 3 (optional)</label>
+          <select
+            value={selectedProduct3}
+            onChange={(e) => setSelectedProduct3(e.target.value)}
             className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
-          />
+          >
+            <option value="">Select Product</option>
+            {products.map((p, i) => (
+              <option key={i} value={p["Product Name"]}>
+                {`${p["Product Name"]} - ${p["Package Size"]} ${p["Package Units"]} - ${p["Product Packaging"]}`}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="md:col-span-2 text-center">
+        <div className="text-center">
           <button
             type="submit"
             className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full text-lg"
