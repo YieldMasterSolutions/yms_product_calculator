@@ -29,7 +29,7 @@ interface CalculatorFormProps {
   onSubmit: (formData: {
     selectedSeedType: string;
     acres: string;
-    selectedProducts: string[]; // Array of product names (up to three)
+    selectedProducts: string[]; // Array of product names, up to three.
   }) => void;
 }
 

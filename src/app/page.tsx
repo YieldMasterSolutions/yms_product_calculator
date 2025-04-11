@@ -31,7 +31,7 @@ const products = [
   { "Product Name": "N-Physis WG", "Package Size": 200, "Package Units": "grams", "Product Packaging": "Box", "Product Cost per Package": "$598.00", "Product Cost per gram": "$2.99", "Application Rate in Grams": 5 },
   { "Product Name": "Envita SC", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$598.00", "Product Cost per oz": "$18.69", "Application Rate in Fluid Ounces": 0.8 },
   { "Product Name": "Nutriquire Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$139.50", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
-  // Renamed the larger container to be unique:
+  // Renamed to make it unique:
   { "Product Name": "Nutriquire Liquid Tote", "Package Size": 35200, "Package Units": "fl oz", "Product Packaging": "Tote", "Product Cost per Package": "$15,345.00", "Product Cost per oz": "$0.44", "Application Rate in Fluid Ounces": 32 },
   { "Product Name": "NueNutri Liquid", "Package Size": 320, "Package Units": "fl oz", "Product Packaging": "Jugs", "Product Cost per Package": "$107.50", "Product Cost per oz": "$0.34", "Application Rate in Fluid Ounces": 32 }
 ];
@@ -39,6 +39,7 @@ const products = [
 export default function HomePage() {
   const [productsData, setProductsData] = useState<ProductCalculation[]>([]);
   const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
+  const [totalCost, setTotalCost] = useState<number | null>(null);
 
   const handleFormSubmit = (formData: {
     selectedSeedType: string;
@@ -54,9 +55,10 @@ export default function HomePage() {
       console.log("Missing required input", formData);
       return;
     }
-    const { productsData, totalCostPerAcre } = calculateProductCosts(acresNum, selectedProductObjects);
+    const { productsData, totalCostPerAcre, totalCost } = calculateProductCosts(acresNum, selectedProductObjects);
     setProductsData(productsData);
     setTotalCostPerAcre(totalCostPerAcre);
+    setTotalCost(totalCost);
   };
 
   return (
@@ -74,8 +76,12 @@ export default function HomePage() {
         </button>
       </div>
       <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
-      {productsData.length > 0 && totalCostPerAcre !== null && (
-        <ResultsDisplay productsData={productsData} totalCostPerAcre={totalCostPerAcre} />
+      {productsData.length > 0 && totalCostPerAcre !== null && totalCost !== null && (
+        <ResultsDisplay 
+          productsData={productsData} 
+          totalCostPerAcre={totalCostPerAcre}
+          totalCost={totalCost}
+        />
       )}
     </div>
   );

@@ -3,21 +3,15 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-
-interface ProductCalculation {
-  productName: string;
-  packagesNeeded: number;
-  productPackageString: string;
-  totalCostToGrower: number;
-  individualCostPerAcre: number;
-}
+import { ProductCalculation } from "../utils/calculations";
 
 interface ResultsDisplayProps {
   productsData: ProductCalculation[];
   totalCostPerAcre: number;
+  totalCost: number;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, totalCostPerAcre }) => {
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, totalCostPerAcre, totalCost }) => {
   const resultRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = () => {
@@ -45,7 +39,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
         <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-3">
           <strong className="block text-xl font-bold text-yellow-400 mb-1">{product.productName}</strong>
           <p className="mb-1">
-            Total Product Units Needed = {product.packagesNeeded} {product.productPackageString}
+            Total Product Units Needed = {product.packagesNeeded} - {product.productPackageString}
           </p>
           <p className="mb-1">
             Total Cost to Grower = ${product.totalCostToGrower.toFixed(2)}
@@ -55,13 +49,15 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
           </p>
         </div>
       ))}
-      {/* Total Program Cost per Acre */}
+      {/* Total Costs Box */}
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
         <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Program Cost per Acre</strong>
         <p>${totalCostPerAcre.toFixed(2)}</p>
+        <strong className="block text-xl font-bold text-yellow-400 mt-4 mb-1">Total Cost</strong>
+        <p>${totalCost.toFixed(2)}</p>
       </div>
-      {/* Download PDF button */}
-      <div className="text-center">
+      {/* Download PDF Button */}
+      <div className="text-center my-4">
         <button
           onClick={downloadPDF}
           className="bg-green-700 hover:bg-green-600 px-6 py-2 rounded-full text-white"
