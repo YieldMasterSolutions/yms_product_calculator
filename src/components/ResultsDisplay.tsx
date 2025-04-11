@@ -11,7 +11,11 @@ interface ResultsDisplayProps {
   totalCost: number;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, totalCostPerAcre, totalCost }) => {
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
+  productsData,
+  totalCostPerAcre,
+  totalCost,
+}) => {
   const resultRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = () => {
@@ -30,9 +34,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
 
   return (
     <div ref={resultRef} className="mt-6 space-y-6">
-      {/* Heading for individual costs */}
+      {/* Heading for individual product costs */}
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-2xl font-bold text-yellow-400 mb-1">Individual Costs</strong>
+        <strong className="block text-2xl font-bold text-yellow-400 mb-1">Individual Product Costs</strong>
       </div>
       {/* Render a box for each product */}
       {productsData.map((product, i) => (
@@ -49,12 +53,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
           </p>
         </div>
       ))}
-      {/* Total Costs Box with updated order */}
+      {/* Summary box for total program costs */}
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-3">
-        <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Cost</strong>
-        <p>${totalCost.toFixed(2)}</p>
-        <strong className="block text-xl font-bold text-yellow-400 mt-4 mb-1">Total Program Cost per Acre</strong>
-        <p>${totalCostPerAcre.toFixed(2)}</p>
+        <strong className="block text-xl font-bold text-yellow-400 mb-1">Total Program Costs</strong>
+        <p>Total Cost = ${totalCost.toFixed(2)}</p>
+        <p>Total Program Cost per Acre = ${totalCostPerAcre.toFixed(2)}</p>
       </div>
       {/* Download PDF Button */}
       <div className="text-center my-4">
@@ -66,5 +69,3 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ productsData, to
         </button>
       </div>
     </div>
-  );
-};
