@@ -2,7 +2,7 @@
 "use client";
 import React, { useState } from "react";
 import { CalculatorForm } from "../components/CalculatorForm";
-import ResultsDisplay from "../components/ResultsDisplay"; // Using default import
+import ResultsDisplay from "../components/ResultsDisplay";
 import { calculateProductCosts } from "../utils/calculations";
 import { ProductCalculation } from "../utils/calculations";
 
@@ -42,6 +42,12 @@ export default function HomePage() {
   const [totalCostPerAcre, setTotalCostPerAcre] = useState<number | null>(null);
   const [totalUndiscountedCost, setTotalUndiscountedCost] = useState<number | null>(null);
   const [totalDiscountedCost, setTotalDiscountedCost] = useState<number | null>(null);
+  const [breakevenYield, setBreakevenYield] = useState<number | null>(null);
+  const [roi2, setRoi2] = useState<number | null>(null);
+  const [roi3, setRoi3] = useState<number | null>(null);
+  const [roi4, setRoi4] = useState<number | null>(null);
+  const [roi5, setRoi5] = useState<number | null>(null);
+  const [cropPriceUnit, setCropPriceUnit] = useState<string>("");
 
   const handleFormSubmit = (formData: {
     selectedSeedType: string;
@@ -50,8 +56,11 @@ export default function HomePage() {
     selectedApplicationTypes: string[];
     dealerDiscount: string;
     growerDiscount: string;
+    cropPrice: string;
+    cropPriceUnit: string;
   }) => {
     const acresNum = parseFloat(formData.acres);
+    const cropPriceNum = formData.cropPrice ? parseFloat(formData.cropPrice) : 0;
     const selectedProductObjects = products.filter(p =>
       formData.selectedProducts.includes(p["Product Name"])
     );
@@ -64,8 +73,7 @@ export default function HomePage() {
     const { productsData, totalCostPerAcre, totalUndiscountedCost, totalDiscountedCost } =
       calculateProductCosts(acresNum, selectedProductObjects, dealer, grower);
     
-    // Append the corresponding application type (in parentheses) to each product's name.
-    // Assumption: formData.selectedProducts and formData.selectedApplicationTypes are in matching order.
+    // Append the corresponding application type to each product's name.
     const updatedProductsData = productsData.map((pd) => {
       const index = formData.selectedProducts.findIndex(name => name === pd.productName);
       if (index !== -1 && formData.selectedApplicationTypes[index]) {
@@ -78,6 +86,20 @@ export default function HomePage() {
     setTotalCostPerAcre(totalCostPerAcre);
     setTotalUndiscountedCost(totalUndiscountedCost);
     setTotalDiscountedCost(totalDiscountedCost);
+    setCropPriceUnit(formData.cropPriceUnit);
+    if (cropPriceNum > 0 && totalCostPerAcre !== null) {
+      setBreakevenYield(totalCostPerAcre / cropPriceNum);
+      setRoi2((2 * totalCostPerAcre) / cropPriceNum);
+      setRoi3((3 * totalCostPerAcre) / cropPriceNum);
+      setRoi4((4 * totalCostPerAcre) / cropPriceNum);
+      setRoi5((5 * totalCostPerAcre) / cropPriceNum);
+    } else {
+      setBreakevenYield(null);
+      setRoi2(null);
+      setRoi3(null);
+      setRoi4(null);
+      setRoi5(null);
+    }
   };
 
   return (
@@ -95,14 +117,23 @@ export default function HomePage() {
         </button>
       </div>
       <CalculatorForm seedTypes={seedTypes} products={products} onSubmit={handleFormSubmit} />
-      {productsData.length > 0 && totalCostPerAcre !== null && totalUndiscountedCost !== null && totalDiscountedCost !== null && (
-        <ResultsDisplay 
-          productsData={productsData} 
-          totalCostPerAcre={totalCostPerAcre}
-          totalUndiscountedCost={totalUndiscountedCost}
-          totalDiscountedCost={totalDiscountedCost}
-        />
-      )}
+      {productsData.length > 0 &&
+        totalCostPerAcre !== null &&
+        totalUndiscountedCost !== null &&
+        totalDiscountedCost !== null && (
+          <ResultsDisplay
+            productsData={productsData}
+            totalCostPerAcre={totalCostPerAcre}
+            totalUndiscountedCost={totalUndiscountedCost}
+            totalDiscountedCost={totalDiscountedCost}
+            breakevenYield={breakevenYield}
+            roi2={roi2}
+            roi3={roi3}
+            roi4={roi4}
+            roi5={roi5}
+            cropPriceUnit={cropPriceUnit}
+          />
+        )}
     </div>
   );
 }
